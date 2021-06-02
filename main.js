@@ -3,35 +3,37 @@ var fs = require("fs");
 var url = require("url");
 var qs = require("querystring");
 
-function templateHTML(title, list, body, control) {
-  return `
-    <!doctype html>
-    <html>
-    <head>
-    <title>WEB1 - ${title}</title>
-    <meta charset="utf-8">
-    </head>
-    <body>
-    <h1><a href="/">WEB2</a></h1>
-    ${list}
-    ${control}
-    ${body}
-    </body>
-    </html>
-    `;
-}
-function templateList(fileList) {
-  var list = "<ul>";
+var template = {
+  HTML: function (title, list, body, control) {
+    return `
+      <!doctype html>
+      <html>
+      <head>
+      <title>WEB1 - ${title}</title>
+      <meta charset="utf-8">
+      </head>
+      <body>
+      <h1><a href="/">WEB2</a></h1>
+      ${list}
+      ${control}
+      ${body}
+      </body>
+      </html>
+      `;
+  },
+  list: function (fileList) {
+    var list = "<ul>";
 
-  // 게시글 리스트 출력 파트
-  var i = 0;
-  while (i < fileList.length) {
-    list = list + `<li><a href="/?id=${fileList[i]}">${fileList[i]}</a></li>`;
-    i = i + 1;
-  }
-  list = list + "</ul>";
-  return list;
-}
+    // 게시글 리스트 출력 파트
+    var i = 0;
+    while (i < fileList.length) {
+      list = list + `<li><a href="/?id=${fileList[i]}">${fileList[i]}</a></li>`;
+      i = i + 1;
+    }
+    list = list + "</ul>";
+    return list;
+  },
+};
 
 var app = http.createServer(function (request, response) {
   var _url = request.url;
@@ -42,16 +44,16 @@ var app = http.createServer(function (request, response) {
       fs.readdir("./data", (err, fileList) => {
         var title = "Welcome";
         var description = "Hello, Node.js";
-        var list = templateList(fileList);
+        var list = template.list(fileList);
 
-        var template = templateHTML(
+        var html = template.HTML(
           title,
           list,
           `<h2>${title}</h2>${description}`,
           `<a href="/create">create</a>`
         );
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
     } else {
       fs.readdir("./data", (err, fileList) => {
@@ -60,8 +62,8 @@ var app = http.createServer(function (request, response) {
           "utf8",
           (err, description) => {
             var title = queryData.get("id");
-            var list = templateList(fileList);
-            var template = templateHTML(
+            var list = template.list(fileList);
+            var html = template.HTML(
               title,
               list,
               `<h2>${title}</h2>${description}`,
@@ -74,7 +76,7 @@ var app = http.createServer(function (request, response) {
               `
             );
             response.writeHead(200);
-            response.end(template);
+            response.end(html);
           }
         );
       });
@@ -82,9 +84,9 @@ var app = http.createServer(function (request, response) {
   } else if (pathname === "/create") {
     fs.readdir("./data", (err, fileList) => {
       var title = "WEB - create";
-      var list = templateList(fileList);
+      var list = template.list(fileList);
 
-      var template = templateHTML(
+      var html = template.HTML(
         title,
         list,
         `
@@ -97,7 +99,7 @@ var app = http.createServer(function (request, response) {
         ""
       );
       response.writeHead(200);
-      response.end(template);
+      response.end(html);
     });
   } else if (pathname === "/create_process") {
     var body = "";
@@ -117,8 +119,8 @@ var app = http.createServer(function (request, response) {
     fs.readdir("./data", (err, fileList) => {
       fs.readFile(`data/${queryData.get("id")}`, "utf8", (err, description) => {
         var title = queryData.get("id");
-        var list = templateList(fileList);
-        var template = templateHTML(
+        var list = template.list(fileList);
+        var html = template.HTML(
           title,
           list,
           `
@@ -132,7 +134,7 @@ var app = http.createServer(function (request, response) {
           `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
         );
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       });
     });
   } else if (pathname === "/update_process") {
