@@ -102,10 +102,11 @@ var app = http.createServer(function (request, response) {
       var post = qs.parse(body);
       var title = post.title;
       var description = post.description;
-      console.log(post.title);
+      fs.writeFile(`data/${title}`, description, "utf8", (err) => {
+        response.writeHead(302, { Location: `/?id=${title}` });
+        response.end("success");
+      });
     });
-    response.writeHead(200);
-    response.end("success");
   } else if (pathname === "/update") {
     fs.readdir("./data", (err, fileList) => {
       fs.readFile(`data/${queryData.get("id")}`, "utf8", (err, description) => {
@@ -127,6 +128,24 @@ var app = http.createServer(function (request, response) {
         response.writeHead(200);
         response.end(template);
       });
+    });
+  } else if (pathname === "/update_process") {
+    var body = "";
+    request.on("data", (data) => {
+      body = body + data;
+    });
+    request.on("end", () => {
+      var post = qs.parse(body);
+      var id = post.id;
+      var title = post.title;
+      var description = post.description;
+      fs.rename(`data/${id}`, `data/${title}`, (err) => {
+        fs.writeFile(`data/${title}`, description, "utf8", (err) => {
+          response.writeHead(302, { Location: `/?id=${title}` });
+          response.end();
+        });
+      });
+      console.log(post);
     });
   } else {
     response.writeHead(404);
