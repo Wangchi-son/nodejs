@@ -151,7 +151,19 @@ var app = http.createServer(function (request, response) {
           response.end();
         });
       });
-      console.log(post);
+    });
+  } else if (pathname === "/delete_process") {
+    var body = "";
+    request.on("data", (data) => {
+      body = body + data;
+    });
+    request.on("end", () => {
+      var post = qs.parse(body);
+      var id = post.id;
+      fs.unlink(`data/${id}`, (err) => {
+        response.writeHead(302, { Location: `/` });
+        response.end();
+      });
     });
   } else {
     response.writeHead(404);
