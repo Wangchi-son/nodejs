@@ -3,6 +3,7 @@ var fs = require("fs");
 var url = require("url");
 var qs = require("querystring");
 var template = require("./lib/template.js");
+var path = require("path");
 
 var app = http.createServer(function (request, response) {
   var _url = request.url;
@@ -26,28 +27,25 @@ var app = http.createServer(function (request, response) {
       });
     } else {
       fs.readdir("./data", (err, fileList) => {
-        fs.readFile(
-          `data/${queryData.get("id")}`,
-          "utf8",
-          (err, description) => {
-            var title = queryData.get("id");
-            var list = template.list(fileList);
-            var html = template.HTML(
-              title,
-              list,
-              `<h2>${title}</h2>${description}`,
-              ` <a href="/create">create</a>
+        var filteredId = path.parse(queryData.get("id")).base;
+        fs.readFile(`data/${filteredId}`, "utf8", (err, description) => {
+          var title = queryData.get("id");
+          var list = template.list(fileList);
+          var html = template.HTML(
+            title,
+            list,
+            `<h2>${title}</h2>${description}`,
+            ` <a href="/create">create</a>
                 <a href="/update?id=${title}">update</a>
                 <form action="delete_process" method="post" onsubmit="">
                   <input type="hidden" name="id" value="${title}">
                   <input type="submit" value="delete">
                 </form>
               `
-            );
-            response.writeHead(200);
-            response.end(html);
-          }
-        );
+          );
+          response.writeHead(200);
+          response.end(html);
+        });
       });
     }
   } else if (pathname === "/create") {
@@ -86,7 +84,8 @@ var app = http.createServer(function (request, response) {
     });
   } else if (pathname === "/update") {
     fs.readdir("./data", (err, fileList) => {
-      fs.readFile(`data/${queryData.get("id")}`, "utf8", (err, description) => {
+      var filteredId = path.parse(queryData.get("id")).base;
+      fs.readFile(`data/${filteredId}`, "utf8", (err, description) => {
         var title = queryData.get("id");
         var list = template.list(fileList);
         var html = template.HTML(
@@ -131,7 +130,8 @@ var app = http.createServer(function (request, response) {
     request.on("end", () => {
       var post = qs.parse(body);
       var id = post.id;
-      fs.unlink(`data/${id}`, (err) => {
+      var filteredId = path.parse(id).base;
+      fs.unlink(`data/${filteredId}`, (err) => {
         response.writeHead(302, { Location: `/` });
         response.end();
       });
